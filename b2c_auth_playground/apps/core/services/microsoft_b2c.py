@@ -62,7 +62,8 @@ def build_logout_uri(post_logout_redirect_uri: str = None):
 
 
 def verify_flow(auth_flow_details: Dict, query_params: QueryDict) -> AcquireTokenDetails:
-    msal_app = retrieve_client_app(authority=B2C_AUTHORITY_SIGN_UP_SIGN_IN)
+    authority = auth_flow_details["auth_uri"].split("/oauth2")[0]
+    msal_app = retrieve_client_app(authority=authority)
     # This method may raise an exception like `"state missing from auth_code_flow" in ex.args` or `state mismatch: oprdHyGTJtIEhbLM vs FwGbuTpMeHsfXztv`
     # Thus it's interesting to wrap it with try/except for production ready apps
     result = msal_app.acquire_token_by_auth_code_flow(auth_flow_details, query_params)
