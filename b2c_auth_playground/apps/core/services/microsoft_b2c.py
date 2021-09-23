@@ -1,5 +1,6 @@
+import logging
+
 from dataclasses import dataclass
-from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -14,6 +15,8 @@ from msal import SerializableTokenCache
 from b2c_auth_playground.settings import B2C_AUTHORITY_SIGN_UP_SIGN_IN
 from b2c_auth_playground.settings import B2C_YOUR_APP_CLIENT_APPLICATION_ID
 from b2c_auth_playground.settings import B2C_YOUR_APP_CLIENT_CREDENTIAL
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -80,14 +83,14 @@ def verify_flow(auth_flow_details: Dict, query_params: QueryDict) -> AcquireToke
     #     "refresh_token": "eyJraWQiOiJjcGltY29yZV8wOTI1MjAxNSIsInZlciI6IjEuMCIsInppcCI6IkRlZmxhdGUiLCJzZXIiOiIxLjAifQ..ck1QuCFzfOR644Yz.1F8X91nltJu1oFLQ8kKGRoiaBwLvKncjvf_nnJG_PXzPciNIj-kbkKEyfiT3n_kHKak23PIC5N4cTsnwjw9IHtTdd83UsJ-5g5cXo2h6MPiZ_Tr7YIcuRN7QmggAKh04ahvvRm6HitNz6eUuHsfS8nmeZfXz-ulhpeTcstmIWnz61NywTmnheqSofTHODPHHAtqpT8z5WGESpUROMGN0APf7PuUYXkLKMuoQpsf_xI4TRYoz_WTHglsmCYe5kug5Um0aZijXTNOKyaJZjdH9DH6PU-aoIzag41NvuvoA-fi3bhX-okoumwApHAdhFTrh_98VwfVR8cWnCq_f_lCgrIxLlZs_A0peyV7xox_Uciw5LLfNdu_e-1IW6PLFLfIKIzs_TWSqcnmeBJ_aFmxEuujLgCm0TPd17csUh-1shSHLEFvlF_EtSnn65FxAgk80Os0CHHEp4QmlEZAnqJcesJfPrEyXLxzIRdQ9Xy4vFp54uVgcUJNZ2aJaAXTVDiypKJUj0z0oq8rVKRdQaYU2YUMnfnMvkylBHsdnAjPJnOks5UhFafHQfpJzLYmTIGh0YVy1hAGpp-qhcGRly0CtWmCNFBoH2NRREi2ZZCnwUlOYNvUKRuxRXpN2xAHHJbSMPeMAvxmYOGTszgNJgSRadFUIdt4Ud8w4xzn2RmSaCNue_oxeXfLYQr9sQVqy7RZZboIJoHI6WOFJl6eRc-oGpcg.BAJ_LChf-yMYjoa5CO3ngA",
     #     "refresh_token_expires_in": 1209600,
     #     "id_token_claims": {
-    #         "exp": 1632085941,
-    #         "nbf": 1632082341,
+    #         "exp": 1632085941, # "Expiration". The value of the exp attribute in the JWT claims set expresses the time of expiration in seconds, which is calculated from 1970-01-01T0:0:0Z as measured in Coordinated Universal Time (UTC)
+    #         "nbf": 1632082341, # "Not Before".
     #         "ver": "1.0",
-    #         "iss": "https://xptoorg.b2clogin.com/03f16fb5-12d8-4a0b-a65e-d325ea25ed2a/v2.0/",
-    #         "sub": "21548d8f-47b3-4585-83ad-9aa4cd487ae1",
-    #         "aud": "c05d9c78-baab-4ee3-8ea7-b1a4b8074309",
+    #         "iss": "https://xptoorg.b2clogin.com/03f16fb5-12d8-4a0b-a65e-d325ea25ed2a/v2.0/", # This is the issuer!
+    #         "sub": "21548d8f-47b3-4585-83ad-9aa4cd487ae1", # This is the subject (the party being asserted by the issuer). An identifier owned by the OpenID provider, which represents the end-user.
+    #         "aud": "c05d9c78-baab-4ee3-8ea7-b1a4b8074309", # Audience. This is the same as B2C_YOUR_APP_CLIENT_APPLICATION_ID
     #         "nonce": "51bffa857035aa0def67541a6edd4d87cf4359813e5df34a4e1296d089bfe82f",
-    #         "iat": 1632082341,
+    #         "iat": 1632082341, #  The iat attribute in the JWT claims set expresses the time when the JWT was issued. The time difference between iat and exp in seconds isn’t the lifetime of the JWT when there’s an nbf (not before) attribute present in the claims set
     #         "auth_time": 1632082323,
     #         "oid": "21548d8f-47b3-4585-83ad-9aa4cd487ae1",
     #         "given_name": "Gregorio",
@@ -97,7 +100,10 @@ def verify_flow(auth_flow_details: Dict, query_params: QueryDict) -> AcquireToke
     #         "tfp": "B2C_1_sign-in-sign-up",
     #     },
     # }
-    return AcquireTokenDetails(**result)
+    acquire_token_details = AcquireTokenDetails(**result)
+    logger.info("What is contained in id_token_claims: %s", acquire_token_details.id_token_claims)
+    logger.info("You can change what is returned in `id_token_claims` if you go to USER FLOW / APPLICATION CLAIMS")
+    return acquire_token_details
 
 
 def build_auth_code_flow(authority: str = None, scopes: List[str] = None, redirect_uri: str = None) -> AuthFlowDetails:
@@ -105,5 +111,14 @@ def build_auth_code_flow(authority: str = None, scopes: List[str] = None, redire
 
     scopes = scopes if scopes else []
     value = msal_app.initiate_auth_code_flow(scopes, redirect_uri)
-
+    # Sample `value` with authority "b2c_1_sign-in-sign-u":
+    # {
+    #     "state": "XHIlwMSuDtjVNTFk",
+    #     "redirect_uri": "http://localhost:8000/api/v1/response-oidc",
+    #     "scope": ["openid", "profile", "offline_access"],
+    #     "auth_uri": "https://xptoorg.b2clogin.com/xptoorg.onmicrosoft.com/b2c_1_sign-in-sign-up/oauth2/v2.0/authorize?client_id=c05d9c78-baab-4ee3-8ea7-b1a4b8074309&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A8000%2Fapi%2Fv1%2Fresponse-oidc&scope=offline_access+openid+profile&state=XHIlwMSuDtjVNTFk&code_challenge=c6I2cwVD0h5qA0Hrjj4mTR6LgsmedOyLEt6IBEoy8Bk&code_challenge_method=S256&nonce=1b1322d4dd3eb0217d93a946faf447b025dec1b3bb2ce8e95af4a03f0529dfc5",
+    #     "code_verifier": "wPq9sIvOEdz6DlhY_WS21g3GV-0BmHka8ojuU.Xy4b7",
+    #     "nonce": "njZqlBVOfoDsFLWE",
+    #     "claims_challenge": None,
+    # }
     return AuthFlowDetails(**value)
