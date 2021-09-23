@@ -8,6 +8,7 @@ from b2c_auth_playground.apps.core.services.microsoft_b2c import build_auth_code
 from b2c_auth_playground.apps.core.services.microsoft_b2c import build_logout_uri
 from b2c_auth_playground.settings import B2C_AUTHORITY_PROFILE_EDITING
 from b2c_auth_playground.settings import B2C_AUTHORITY_SIGN_UP_SIGN_IN
+from b2c_auth_playground.settings import B2C_SCOPES
 
 
 def index(request):
@@ -34,7 +35,9 @@ def logout(request):
 
 def initiate_login_flow(request):
     redirect_uri = _build_redirect_uri(request)
-    auth_flow_details = build_auth_code_flow(authority=B2C_AUTHORITY_SIGN_UP_SIGN_IN, redirect_uri=redirect_uri)
+    auth_flow_details = build_auth_code_flow(
+        authority=B2C_AUTHORITY_SIGN_UP_SIGN_IN, scopes=B2C_SCOPES, redirect_uri=redirect_uri
+    )
     # So we can retrieve it later
     request.session["flow"] = asdict(auth_flow_details)
     # Then we redirect the user

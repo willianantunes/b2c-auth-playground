@@ -64,9 +64,56 @@ def build_logout_uri(post_logout_redirect_uri: str = None):
     return address
 
 
-def verify_flow(auth_flow_details: Dict, query_params: QueryDict) -> AcquireTokenDetails:
+def obtain_access_token(scopes=None, cache=None, authority=None) -> dict:
+    msal_app = retrieve_client_app(cache=cache, authority=authority)
+    accounts = msal_app.get_accounts()
+    # So all account(s) belong to the current signed-in user!
+    if accounts:
+        first_account = accounts[0]
+        # Sample of content in first_account:
+        # {
+        #     "home_account_id": "21548d8f-47b3-4585-83ad-9aa4cd487ae1-b2c_1_sign-in-sign-up.03f16fb5-12d8-4a0b-a65e-d325ea25ed2a",
+        #     "environment": "xptoorg.b2clogin.com",
+        #     "username": "",
+        #     "authority_type": "MSSTS",
+        #     "local_account_id": "21548d8f-47b3-4585-83ad-9aa4cd487ae1",
+        #     "realm": "xptoorg.onmicrosoft.com",
+        # }
+        result = msal_app.acquire_token_silent(scopes, account=first_account)
+        # Sample content of result:
+        # {
+        #     "id_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ilg1ZVhrNHh5b2pORnVtMWtsMll0djhkbE5QNC1jNTdkTzZRR1RWQndhTmsifQ.eyJleHAiOjE2MzI0MjE3MjIsIm5iZiI6MTYzMjQxODEyMiwidmVyIjoiMS4wIiwiaXNzIjoiaHR0cHM6Ly94cHRvb3JnLmIyY2xvZ2luLmNvbS8wM2YxNmZiNS0xMmQ4LTRhMGItYTY1ZS1kMzI1ZWEyNWVkMmEvdjIuMC8iLCJzdWIiOiIyMTU0OGQ4Zi00N2IzLTQ1ODUtODNhZC05YWE0Y2Q0ODdhZTEiLCJhdWQiOiJjMDVkOWM3OC1iYWFiLTRlZTMtOGVhNy1iMWE0YjgwNzQzMDkiLCJub25jZSI6IjFlNDFhYjdmZjk1NTgxNmY4OTRjYzA4YTZmMDFmZjkwNDZmZTEyNDQ5ZDU4NWNmOTQ3NzZkOTk2OTdiMjQ1NjUiLCJpYXQiOjE2MzI0MTgxMjIsImF1dGhfdGltZSI6MTYzMjQxNzkwOSwib2lkIjoiMjE1NDhkOGYtNDdiMy00NTg1LTgzYWQtOWFhNGNkNDg3YWUxIiwiZ2l2ZW5fbmFtZSI6IkdyZWdvcmlvIiwiZmFtaWx5X25hbWUiOiJBbG1laWRhIiwibmFtZSI6Ik5vdCB1bmtub3duIGFueW1vcmUiLCJjaXR5IjoiU8OjbyBQYXVsbyIsImNvdW50cnkiOiJCcmF6aWwiLCJ0ZnAiOiJCMkNfMV9zaWduLWluLXNpZ24tdXAifQ.JuUrkppw4Y2VMn7S3awqk-ayTf25g95YB6nCrGwCoxVGuJM_e82MWB0QreQ6n50-oHmFxggLO1ARC0JL1XII9dbnnMnym70BqPpzQJ0ZGWIyzZroZmZyWtDHE222zJsnt833xKF8xFz48AJnEIChsZvilmuMUVR4GXS61mu7z3_GD4_jxGnLeMFngxkCFMbl7w3QD_RHQQSyX4RrRlZy-CEiKLPzCi42PF5AprpefiZoK_nHZ0ry_yVa6hEGoGP_dxOA5lC3Ef--tAxkeMQKazqRlEetWgJ4JsnA96ebvmvjuo8LIh2dOGY37iXyQ3rGhZdlUAxiyKxnwmrZix39jA",
+        #     "token_type": "Bearer",
+        #     "not_before": 1632418122,
+        #     "client_info": "eyJ1aWQiOiIyMTU0OGQ4Zi00N2IzLTQ1ODUtODNhZC05YWE0Y2Q0ODdhZTEtYjJjXzFfc2lnbi1pbi1zaWduLXVwIiwidXRpZCI6IjAzZjE2ZmI1LTEyZDgtNGEwYi1hNjVlLWQzMjVlYTI1ZWQyYSJ9",
+        #     "scope": "",
+        #     "refresh_token": "eyJraWQiOiJjcGltY29yZV8wOTI1MjAxNSIsInZlciI6IjEuMCIsInppcCI6IkRlZmxhdGUiLCJzZXIiOiIxLjAifQ..yA1IqzxNRcir0Znl.S7MXSzxAyFersNQFUCx3huRBpPhiJoTqaGBuh0ySh-cTTXO5ya1xCJ-ptvaIK87jFPw3Vu4WYbXBMsXEOPrvVlPd0unlhp_NBfP1fjOhaLmBsd9tgczBZQMG3QO2cQ3PFMvtZVBc0Hg8l-eExmzFiHqiUPNsTZEDKStjG3MkuOJ0bG9z5Rw7FwJ9Gqh-0IqpCDi8PM1RLuG4bAD_z4644CT8Y6I9WCpaiw4u5_u_Yj3KcS3ef7TGDG3AdRlLIotgaKryoNNipGClUjyPGGcE8JOdh1Ff-h1m9Fb1fd3TBx8s7mmV7PyOrQ8WySbr4-Lq6DHZjRFYW0XfTsrfHtztAxQQX75fukk2k1cI4RhAweQIG6kcYdjeY6N3l92wJp5bAO6rz53m1vl2vXA3hhDarksWdrQRfgBh8vOlhSksg4HIAHT1oeLSwGyurc-cZ39T-DwD3yM9lv4Z29-QwfeAY2KyBjHIlnALfSXDjvXKXopO1zZitqTvdyBRobwZl42se7qFjghBwQRzaKKFwX2U5beUy0MaUWq9uWeMorErRczaXR4G492zUf8nZcGKrNAWUFe0zCpAUexdMf-6VtPkSCImMPOSC0Ad5JfixHMvZrmYYTJZ33JekbzgPhNku-ccoCh2B2Q0E0mud2vG212tWz9jrBpmiIbrmFGHHYhnrGFnpoN47DL17L8lzl_GOTsfcrA0rB-_bdOEZozwBuL_Hmgf33P7pVfAhAOofS1NcINFna5urQ.x1d3wJowMuqfER0dJ_V1xg",
+        #     "refresh_token_expires_in": 1209600,
+        #     "id_token_claims": {
+        #         "exp": 1632421722,
+        #         "nbf": 1632418122,
+        #         "ver": "1.0",
+        #         "iss": "https://xptoorg.b2clogin.com/03f16fb5-12d8-4a0b-a65e-d325ea25ed2a/v2.0/",
+        #         "sub": "21548d8f-47b3-4585-83ad-9aa4cd487ae1",
+        #         "aud": "c05d9c78-baab-4ee3-8ea7-b1a4b8074309",
+        #         "nonce": "1e41ab7ff955816f894cc08a6f01ff9046fe12449d585cf94776d99697b24565",
+        #         "iat": 1632418122,
+        #         "auth_time": 1632417909,
+        #         "oid": "21548d8f-47b3-4585-83ad-9aa4cd487ae1",
+        #         "given_name": "Gregorio",
+        #         "family_name": "Almeida",
+        #         "name": "Not unknown anymore",
+        #         "city": "São Paulo",
+        #         "country": "Brazil",
+        #         "tfp": "B2C_1_sign-in-sign-up",
+        #     },
+        # }
+        return result
+
+
+def verify_flow(auth_flow_details: Dict, query_params: QueryDict, cache=None) -> AcquireTokenDetails:
     authority = auth_flow_details["auth_uri"].split("/oauth2")[0]
-    msal_app = retrieve_client_app(authority=authority)
+    msal_app = retrieve_client_app(cache=cache, authority=authority)
     # This method may raise an exception like `"state missing from auth_code_flow" in ex.args` or `state mismatch: oprdHyGTJtIEhbLM vs FwGbuTpMeHsfXztv`
     # Thus it's interesting to wrap it with try/except for production ready apps
     result = msal_app.acquire_token_by_auth_code_flow(auth_flow_details, query_params)
@@ -75,6 +122,7 @@ def verify_flow(auth_flow_details: Dict, query_params: QueryDict) -> AcquireToke
     # {'error': 'invalid_client', 'error_description': 'AADB2C90081: The specified client_secret does not match the expected value for this client. Please correct the client_secret and try again.\r\nCorrelation ID: 24abcb7d-837d-4e06-b060-170904eac5c2\r\nTimestamp: 2021-09-19 20:06:38Z\r\n'}
     # {'error': 'invalid_grant', 'error_description': 'AADB2C90088: The provided grant has not been issued for this endpoint. Actual Value : B2C_1_sign-in-sign-up and Expected Value : B2C_1_profile_editing\r\nCorrelation ID: da82e598-f345-4f06-b47f-cc1ce3bc69a4\r\nTimestamp: 2021-09-19 22:51:31Z\r\n'}
     # {
+    #     # try to read the value of `id_token` here: https://jwt.ms/
     #     "id_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ilg1ZVhrNHh5b2pORnVtMWtsMll0djhkbE5QNC1jNTdkTzZRR1RWQndhTmsifQ.eyJleHAiOjE2MzIwODU5NDEsIm5iZiI6MTYzMjA4MjM0MSwidmVyIjoiMS4wIiwiaXNzIjoiaHR0cHM6Ly94cHRvb3JnLmIyY2xvZ2luLmNvbS8wM2YxNmZiNS0xMmQ4LTRhMGItYTY1ZS1kMzI1ZWEyNWVkMmEvdjIuMC8iLCJzdWIiOiIyMTU0OGQ4Zi00N2IzLTQ1ODUtODNhZC05YWE0Y2Q0ODdhZTEiLCJhdWQiOiJjMDVkOWM3OC1iYWFiLTRlZTMtOGVhNy1iMWE0YjgwNzQzMDkiLCJub25jZSI6IjUxYmZmYTg1NzAzNWFhMGRlZjY3NTQxYTZlZGQ0ZDg3Y2Y0MzU5ODEzZTVkZjM0YTRlMTI5NmQwODliZmU4MmYiLCJpYXQiOjE2MzIwODIzNDEsImF1dGhfdGltZSI6MTYzMjA4MjMyMywib2lkIjoiMjE1NDhkOGYtNDdiMy00NTg1LTgzYWQtOWFhNGNkNDg3YWUxIiwiZ2l2ZW5fbmFtZSI6IkdyZWdvcmlvIiwiZmFtaWx5X25hbWUiOiJBbG1laWRhIiwibmFtZSI6InVua25vd24iLCJlbWFpbHMiOlsid2lsbGlhbmxpbWFhbnR1bmVzQGdtYWlsLmNvbSJdLCJ0ZnAiOiJCMkNfMV9zaWduLWluLXNpZ24tdXAifQ.dTj55DQpG0VYef0FeVwuUlxHrYpMbBHaNCpKZu6dhu6zzxVZEf3fmWLItiDKBX5YZjgG7ufDjGRFiWA9jjYu0a0ctJ2fnK94ygxo9mwONWNUmAubDF2Gnidc9Iv0FpxbtKtEaYAHQuQcNpMDsiRJbvYpbPg9eFB0lQDgSa2RygNI3qKmPiqay1wPlvlz1bVwZZ1rtPpsTEPNbfIkSXZNZOv5x2YrbekQxUBgjneZLH4PqFpmG3mqSHsrFfWDlzgBhOCGu2kKaCLBDO7Z8Bn-ROpqt9xLgkYeMfmHILR8RikzcvHwZaFUj4E3WuZsq4vzk_vzlJGoqsuOcPbtcc5yOg",
     #     "token_type": "Bearer",
     #     "not_before": 1632082341,

@@ -156,7 +156,16 @@ authority_template = f"https://{B2B_TENANT}.b2clogin.com/{B2B_TENANT}.onmicrosof
 
 # In order to communicate with MS
 B2C_YOUR_APP_CLIENT_APPLICATION_ID = "c05d9c78-baab-4ee3-8ea7-b1a4b8074309"
+B2C_YOUR_APP_APPLICATION_ID_URI = f"https://xptoorg.onmicrosoft.com/{B2C_YOUR_APP_CLIENT_APPLICATION_ID}"
 B2C_YOUR_APP_CLIENT_CREDENTIAL = "BTr7Q~C0FY43iXWgLTJvjxRZPIQmNIZajUKIw"
+
+# <QueryDict: {'error': ['invalid_request'], 'error_description': ["AADB2C90117: The scope 'User.ReadBasic.All' provided in the request is not supported.\r\nCorrelation ID: 4f20b0aa-2e50-4508-8fde-3f9aca1e20de\r\nTimestamp: 2021-09-23 17:09:55Z\r\n"], 'state': ['gVYBafGhXCPFcHLK']}>
+# https://stackoverflow.com/a/45853520/3899136
+# https://stackoverflow.com/a/62693315/3899136
+# https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-permissions-and-consent#openid-connect-scopes
+# You don't need to add ['profile', 'offline_access', 'openid'] because MSAL do it for you, just add custom scopes here!
+# At the end, if you include `email`, MSAL will understand: ['profile', 'offline_access', 'openid', 'email']
+B2C_SCOPES = []
 
 # Authorities
 USER_FLOWS_SIGN_UP_SIGN_IN = "B2C_1_sign-in-sign-up"

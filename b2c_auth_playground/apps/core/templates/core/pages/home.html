@@ -6,6 +6,11 @@
         <h2>Here's the home page!</h2>
         {% if 'user' in request.session %}
             <p>You are <strong>{{ request.session.user.given_name }}</strong>!</p>
+
+            <button class="btn-see-your-data">Click here to see your data!</button>
+            <br />
+            <br />
+            <button class="btn-see-your-backend-data">Click here to see your backend data!</button>
         {% endif %}
         {% if 'user' not in request.session %}
             <p>I know nothing about you. Log in first!</p>

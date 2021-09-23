@@ -14,4 +14,6 @@ urlpatterns = [
     # APIs
     path("health-check", api_views.health_check, name="health-check"),
     path("api/v1/response-oidc", api_views_v1.handle_response_oidc, name="v1/response-oidc"),
+    path("api/v1/user-data", api_views_v1.consult_user_data, name="v1/user-data"),
+    path("api/v1/what-i-have", api_views_v1.what_do_i_have, name="v1/what-i-have"),
 ]
