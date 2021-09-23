@@ -1,3 +1,6 @@
+import os
+
+from logging import Formatter
 from pathlib import Path
 
 from b2c_auth_playground.apps.core.apps import CoreConfig
@@ -104,6 +107,36 @@ USE_L10N = True
 
 USE_TZ = True
 
+# Logging
+# https://docs.djangoproject.com/en/3.1/topics/logging/
+
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "standard": {
+            "()": Formatter,
+            "format": "%(asctime)s - level=%(levelname)s - %(name)s - %(message)s",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+        }
+    },
+    "loggers": {
+        "": {"level": os.getenv("ROOT_LOG_LEVEL", "INFO"), "handlers": ["console"]},
+        "b2c_auth_playground": {
+            "level": os.getenv("PROJECT_LOG_LEVEL", "DEBUG"),
+            "handlers": ["console"],
+            "propagate": False,
+        },
+        "django": {"level": os.getenv("DJANGO_LOG_LEVEL", "INFO"), "handlers": ["console"]},
+        "django.db.backends": {"level": os.getenv("DJANGO_DB_BACKENDS_LOG_LEVEL", "INFO"), "handlers": ["console"]},
+    },
+}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
