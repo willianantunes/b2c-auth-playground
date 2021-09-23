@@ -155,9 +155,21 @@ B2B_TENANT = "xptoorg"
 authority_template = f"https://{B2B_TENANT}.b2clogin.com/{B2B_TENANT}.onmicrosoft.com/{{user_flow}}"
 
 # In order to communicate with MS
+
+# b2c-auth-playground
 B2C_YOUR_APP_CLIENT_APPLICATION_ID = "c05d9c78-baab-4ee3-8ea7-b1a4b8074309"
-B2C_YOUR_APP_APPLICATION_ID_URI = f"https://xptoorg.onmicrosoft.com/{B2C_YOUR_APP_CLIENT_APPLICATION_ID}"
 B2C_YOUR_APP_CLIENT_CREDENTIAL = "BTr7Q~C0FY43iXWgLTJvjxRZPIQmNIZajUKIw"
+
+# b2c-test-single-tenant
+# B2C_YOUR_APP_CLIENT_APPLICATION_ID = "8a2e4f9f-550b-4b9a-a74e-673790af1e3d"
+# B2C_YOUR_APP_CLIENT_CREDENTIAL = "WnU7Q~bTc1dX5GxS.3dQfBeI_SG2_XJ6Lz8Xw"
+
+# b2c-test-multitenant
+# B2C_YOUR_APP_CLIENT_APPLICATION_ID = "3e9263cd-657e-4654-bf8c-aecae4c558e6"
+# B2C_YOUR_APP_CLIENT_CREDENTIAL = "QX07Q~eVOiZfSW-LzFWy6.Fu6DvZbUAdaxbqI"
+
+B2C_YOUR_APP_APPLICATION_ID_URI = f"https://xptoorg.onmicrosoft.com/{B2C_YOUR_APP_CLIENT_APPLICATION_ID}"
+
 
 # <QueryDict: {'error': ['invalid_request'], 'error_description': ["AADB2C90117: The scope 'User.ReadBasic.All' provided in the request is not supported.\r\nCorrelation ID: 4f20b0aa-2e50-4508-8fde-3f9aca1e20de\r\nTimestamp: 2021-09-23 17:09:55Z\r\n"], 'state': ['gVYBafGhXCPFcHLK']}>
 # https://stackoverflow.com/a/45853520/3899136
