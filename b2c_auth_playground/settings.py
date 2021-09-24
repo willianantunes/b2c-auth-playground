@@ -177,7 +177,10 @@ B2C_YOUR_APP_APPLICATION_ID_URI = f"https://xptoorg.onmicrosoft.com/{B2C_YOUR_AP
 # https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-permissions-and-consent#openid-connect-scopes
 # You don't need to add ['profile', 'offline_access', 'openid'] because MSAL do it for you, just add custom scopes here!
 # At the end, if you include `email`, MSAL will understand: ['profile', 'offline_access', 'openid', 'email']
-B2C_SCOPES = []
+B2C_SCOPES = [
+    # You should add this permission to your App to receive an `access_token`!
+    "https://xptoorg.onmicrosoft.com/app-be-xpto-23092021/XPTO.Read.Situations"
+]
 
 # Authorities
 USER_FLOWS_SIGN_UP_SIGN_IN = "B2C_1_sign-in-sign-up"

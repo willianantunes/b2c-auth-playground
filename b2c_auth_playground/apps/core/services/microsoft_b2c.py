@@ -42,6 +42,11 @@ class AcquireTokenDetails:
     id_token_claims: Dict[str, Union[int, str, List[str]]]
     error: Optional[str] = None
     error_description: Optional[str] = None
+    # Theses fields are only sent if you append a custom scope to the Application in API permissions
+    resource: Optional[str] = None
+    expires_on: Optional[int] = None
+    expires_in: Optional[int] = None
+    access_token: Optional[str] = None
 
 
 def retrieve_client_app(cache: SerializableTokenCache = None, authority: str = None) -> ConfidentialClientApplication:
