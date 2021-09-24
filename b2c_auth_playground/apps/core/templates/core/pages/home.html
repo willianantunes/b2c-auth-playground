@@ -8,12 +8,29 @@
             <p>You are <strong>{{ request.session.user.given_name }}</strong>!</p>
 
             <button class="btn-see-your-data">Click here to see your data!</button>
-            <br />
-            <br />
+            <br/>
+            <br/>
             <button class="btn-see-your-backend-data">Click here to see your backend data!</button>
         {% endif %}
         {% if 'user' not in request.session %}
             <p>I know nothing about you. Log in first!</p>
+            <p>Would you like to use <strong>Resource Owner Password credentials</strong>? Try below:</p>
+            <form action="{% url 'index' %}" method="post">
+                {% csrf_token %}
+                <fieldset>
+                    <label for="name">Enter your e-mail:
+                        <input type="text" name="email" required>
+                    </label>
+                </fieldset>
+                <fieldset>
+                    <label for="email">Enter your password:
+                        <input type="password" name="password" required/>
+                    </label>
+                </fieldset>
+                <fieldset>
+                    <input type="submit" value="Log-in">
+                </fieldset>
+            </form>
         {% endif %}
     </main>
 

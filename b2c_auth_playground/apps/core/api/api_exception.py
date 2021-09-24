@@ -1,6 +1,11 @@
 from rest_framework.exceptions import APIException
 
 
+class EmptyBodyException(APIException):
+    status_code = 400
+    default_detail = "You should send a body with a valid JSON"
+
+
 class B2CContractNotRespectedException(APIException):
     status_code = 400
     default_detail = "It seems something is missing to accomplish the task"

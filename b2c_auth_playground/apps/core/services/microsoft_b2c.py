@@ -6,15 +6,20 @@ from typing import List
 from typing import Optional
 from typing import Union
 
+import jwt
 import msal
+import requests
 
 from django.http import QueryDict
 from msal import ConfidentialClientApplication
 from msal import SerializableTokenCache
 
+from b2c_auth_playground.settings import B2C_AUTHORITY_RESOURCE_OWNER
 from b2c_auth_playground.settings import B2C_AUTHORITY_SIGN_UP_SIGN_IN
 from b2c_auth_playground.settings import B2C_YOUR_APP_CLIENT_APPLICATION_ID
 from b2c_auth_playground.settings import B2C_YOUR_APP_CLIENT_CREDENTIAL
+from b2c_auth_playground.settings import B2C_YOUR_APP_RESOURCE_CLIENT_CREDENTIAL
+from b2c_auth_playground.settings import B2C_YOUR_APP_RESOURCE_OWNER_APPLICATION_ID
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +54,12 @@ class AcquireTokenDetails:
     access_token: Optional[str] = None
 
 
-def retrieve_client_app(cache: SerializableTokenCache = None, authority: str = None) -> ConfidentialClientApplication:
+def retrieve_client_app(
+    cache: SerializableTokenCache = None, authority: str = None, app_id=None, app_secret=None
+) -> ConfidentialClientApplication:
+    app_id = app_id if app_id else B2C_YOUR_APP_CLIENT_APPLICATION_ID
+    app_secret = app_secret if app_secret else B2C_YOUR_APP_CLIENT_CREDENTIAL
+
     return msal.ConfidentialClientApplication(
         B2C_YOUR_APP_CLIENT_APPLICATION_ID,
         authority=authority,
@@ -157,6 +167,63 @@ def verify_flow(auth_flow_details: Dict, query_params: QueryDict, cache=None) ->
     logger.info("What is contained in id_token_claims: %s", acquire_token_details.id_token_claims)
     logger.info("You can change what is returned in `id_token_claims` if you go to USER FLOW / APPLICATION CLAIMS")
     return acquire_token_details
+
+
+def authenticate(username, password, scopes=None, cache=None):
+    logger.info("Doing resource owner password credentials flow...")
+    msal_app = retrieve_client_app(
+        cache=cache,
+        authority=B2C_AUTHORITY_RESOURCE_OWNER,
+        app_id=B2C_YOUR_APP_RESOURCE_OWNER_APPLICATION_ID,
+        app_secret=B2C_YOUR_APP_RESOURCE_CLIENT_CREDENTIAL,
+    )
+    details = msal_app.acquire_token_by_username_password(username, password, scopes)
+    raise NotImplementedError
+
+
+def authenticate_on_hair(username, password, scopes=None, cache=None):
+    logger.info("Doing resource owner password credentials flow... But using RAW process (without a library)")
+
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+    params = {
+        "client_id": B2C_YOUR_APP_RESOURCE_OWNER_APPLICATION_ID,
+        "username": username,
+        "password": password,
+        "grant_type": "password",
+        "scope": " ".join(scopes),
+        "response_type": "token id_token",
+    }
+    result = requests.post(f"{B2C_AUTHORITY_RESOURCE_OWNER}/oauth2/v2.0/token", data=params, headers=headers)
+    assert result.status_code == 200
+    body = result.json()
+
+    # Sample of what is returned
+    # {
+    #     "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ilg1ZVhrNHh5b2pORnVtMWtsMll0djhkbE5QNC1jNTdkTzZRR1RWQndhTmsifQ.eyJpc3MiOiJodHRwczovL3hwdG9vcmcuYjJjbG9naW4uY29tLzAzZjE2ZmI1LTEyZDgtNGEwYi1hNjVlLWQzMjVlYTI1ZWQyYS92Mi4wLyIsImV4cCI6MTYzMjUxMDU2MCwibmJmIjoxNjMyNTA2OTYwLCJhdWQiOiJkNGJlNzM0Zi04NzQ2LTQ3MzgtOGY4NC03MjZiYzQ2YWJhZTAiLCJpZHAiOiJMb2NhbEFjY291bnQiLCJzdWIiOiIyMTU0OGQ4Zi00N2IzLTQ1ODUtODNhZC05YWE0Y2Q0ODdhZTEiLCJnaXZlbl9uYW1lIjoiR3JlZ29yaW8iLCJmYW1pbHlfbmFtZSI6IkFsbWVpZGEiLCJ0ZnAiOiJCMkNfMV9yZXNvdXJjZS1vd25lciIsImF6cCI6ImQ0YmU3MzRmLTg3NDYtNDczOC04Zjg0LTcyNmJjNDZhYmFlMCIsInZlciI6IjEuMCIsImlhdCI6MTYzMjUwNjk2MH0.S3hdmIrmYgGEwAkHfWyHq0z0ulnY5jkd9zakARsJVJpn2eObn1-jOGdrKzdTWenrusv0QfGNV2jjomZq0aRr60bvLgw-iu1M5P7Q5-VGhIxd8DMGwFpw89aulb9-Ddpbce2QkFzuh0WWtsGcwgLuhKNmfZySVHqPpPMeh5fqxyP4UjdI45HeoL6q0HP-1pmVu7FuhxdBUNalH6FOPUcqLxykuMbygyBAy8B3k6WGboAvDdCmGhHmqpsi4aiwc5giaOUsd5QK3iPLmsJCI5Yc1HT2gFKeG3UuHoW8cc69r4AGaoRp6RNYEF783j4XtAQF3r96QNwtWiNKsfq6SOs1NA",
+    #     "token_type": "Bearer",
+    #     "expires_in": "3600",
+    #     "id_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ilg1ZVhrNHh5b2pORnVtMWtsMll0djhkbE5QNC1jNTdkTzZRR1RWQndhTmsifQ.eyJleHAiOjE2MzI1MTA1NjAsIm5iZiI6MTYzMjUwNjk2MCwidmVyIjoiMS4wIiwiaXNzIjoiaHR0cHM6Ly94cHRvb3JnLmIyY2xvZ2luLmNvbS8wM2YxNmZiNS0xMmQ4LTRhMGItYTY1ZS1kMzI1ZWEyNWVkMmEvdjIuMC8iLCJzdWIiOiIyMTU0OGQ4Zi00N2IzLTQ1ODUtODNhZC05YWE0Y2Q0ODdhZTEiLCJhdWQiOiJkNGJlNzM0Zi04NzQ2LTQ3MzgtOGY4NC03MjZiYzQ2YWJhZTAiLCJpYXQiOjE2MzI1MDY5NjAsImF1dGhfdGltZSI6MTYzMjUwNjk2MCwiaWRwIjoiTG9jYWxBY2NvdW50IiwiZ2l2ZW5fbmFtZSI6IkdyZWdvcmlvIiwiZmFtaWx5X25hbWUiOiJBbG1laWRhIiwidGZwIjoiQjJDXzFfcmVzb3VyY2Utb3duZXIiLCJhdF9oYXNoIjoibnFvUk5QbDZyLTVhOTcweGNac2VYQSJ9.GcCckxT38O68We7_V0JkADD5cVjRLsHb0ZmuLKjUhAgTsB9h4vnhiRdlcWOlFyVZq9Ulw8_nRqAfVVtJMC7RYL-JMWzRIDfr7ohEBJE9d2L8Pqt7sHZwaOYJnYOcIHba-xBZyDSLS05DCl3PmYiytVEfF79Ia42rTo0YaTxVMpnlExRCujKiTCh67uJ2g6EtJ03_Ci1fwgE85xG7WOOsaz_r3bxz9dJo-ltM4SWlB7UP9eqdrCZ8g_asQSRqmt00KkT88-VYqvDGAtPycVhghkgfCcFVUrjDgG9zZKgWgQx4V0-2Nn8dsaKZmw_LcEipLXEcC3GpRSMmjWYSr3Q_0A",
+    # }
+
+    claims = jwt.decode(body["id_token"], options={"verify_signature": False})
+    # Sample value of claims
+    # {
+    #     "exp": 1632515480,
+    #     "nbf": 1632511880,
+    #     "ver": "1.0",
+    #     "iss": "https://xptoorg.b2clogin.com/03f16fb5-12d8-4a0b-a65e-d325ea25ed2a/v2.0/",
+    #     "sub": "21548d8f-47b3-4585-83ad-9aa4cd487ae1",
+    #     "aud": "d4be734f-8746-4738-8f84-726bc46abae0",
+    #     "iat": 1632511880,
+    #     "auth_time": 1632511880,
+    #     "idp": "LocalAccount",
+    #     "given_name": "Gregorio",
+    #     "family_name": "Almeida",
+    #     "tfp": "B2C_1_resource-owner",
+    #     "at_hash": "9O30CKlA3gVkXEJyWVaAxA",
+    # }
+
+    return claims
 
 
 def build_auth_code_flow(authority: str = None, scopes: List[str] = None, redirect_uri: str = None) -> AuthFlowDetails:

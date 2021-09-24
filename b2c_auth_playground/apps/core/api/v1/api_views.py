@@ -55,9 +55,14 @@ def consult_user_data(request):
     result = obtain_access_token(hard_coded_scopes, cache, B2C_AUTHORITY_SIGN_UP_SIGN_IN)
     _save_cache(request, cache)
 
-    access_token = result.get("access_token")
-    if not access_token:
-        logger.warning("Authentication gives you an id token only. Authorisation to a resource gives you access tokens")
+    try:
+        access_token = result.get("access_token")
+        if not access_token:
+            logger.warning(
+                "Authentication gives you an id token only. Authorisation to a resource gives you access tokens"
+            )
+    except AttributeError:
+        result = {"error": "did you use ROPC?!"}
 
     return Response(data=result)
 

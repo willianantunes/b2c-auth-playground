@@ -156,9 +156,11 @@ authority_template = f"https://{B2B_TENANT}.b2clogin.com/{B2B_TENANT}.onmicrosof
 
 # In order to communicate with MS
 
-# b2c-auth-playground
-B2C_YOUR_APP_CLIENT_APPLICATION_ID = "c05d9c78-baab-4ee3-8ea7-b1a4b8074309"
-B2C_YOUR_APP_CLIENT_CREDENTIAL = "BTr7Q~C0FY43iXWgLTJvjxRZPIQmNIZajUKIw"
+B2C_YOUR_APP_CLIENT_APPLICATION_ID = "32c47165-ef06-4cfd-80ef-ca3d2b282cc8"
+B2C_YOUR_APP_CLIENT_CREDENTIAL = ".m97Q~uOj2PohUcoFiVXCaGa21-rC.EU.mriy"
+
+B2C_YOUR_APP_RESOURCE_OWNER_APPLICATION_ID = "d4be734f-8746-4738-8f84-726bc46abae0"
+B2C_YOUR_APP_RESOURCE_CLIENT_CREDENTIAL = "8oa7Q~FISBxt~CKKitKEt96cmMdAmKR1gKa8D"
 
 # b2c-test-single-tenant
 # B2C_YOUR_APP_CLIENT_APPLICATION_ID = "8a2e4f9f-550b-4b9a-a74e-673790af1e3d"
@@ -179,12 +181,18 @@ B2C_YOUR_APP_APPLICATION_ID_URI = f"https://xptoorg.onmicrosoft.com/{B2C_YOUR_AP
 # At the end, if you include `email`, MSAL will understand: ['profile', 'offline_access', 'openid', 'email']
 B2C_SCOPES = [
     # You should add this permission to your App to receive an `access_token`!
-    "https://xptoorg.onmicrosoft.com/app-be-xpto-23092021/XPTO.Read.Situations"
+    # "https://xptoorg.onmicrosoft.com/app-be-xpto-23092021/XPTO.Read.Situations"
+]
+B2C_SCOPES_RESOURCE_OWNER = [
+    "openid",
+    B2C_YOUR_APP_RESOURCE_OWNER_APPLICATION_ID,
 ]
 
 # Authorities
 USER_FLOWS_SIGN_UP_SIGN_IN = "B2C_1_sign-in-sign-up"
 USER_FLOWS_PROFILE_EDITING = "B2C_1_profile_editing"
+USER_FLOWS_RESOURCE_OWNER = "B2C_1_resource-owner"
 
 B2C_AUTHORITY_SIGN_UP_SIGN_IN = authority_template.format(user_flow=USER_FLOWS_SIGN_UP_SIGN_IN)
 B2C_AUTHORITY_PROFILE_EDITING = authority_template.format(user_flow=USER_FLOWS_PROFILE_EDITING)
+B2C_AUTHORITY_RESOURCE_OWNER = authority_template.format(user_flow=USER_FLOWS_RESOURCE_OWNER)
