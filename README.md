@@ -9,6 +9,7 @@ I'm exploring, so do not consider this project as a real one (if you look at the
 Articles:
 
 - [Configure authentication in a sample Python web app by using Azure AD B2C](https://docs.microsoft.com/en-us/azure/active-directory-b2c/configure-authentication-sample-python-web-app)
+- [Working with MSAL.js and Azure AD B2C](https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/1324cee3a1d516fcf9720f8691c7140ac7254bb0/lib/msal-browser/docs/working-with-b2c.md)
 
 Projects:
 
